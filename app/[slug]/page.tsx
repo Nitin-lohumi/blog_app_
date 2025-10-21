@@ -1,76 +1,104 @@
 "use client";
-
 import React from "react";
 import { trpc } from "../_trpc_client/client";
 import use_Store from "@/store/store";
-
+import Markdown from "react-markdown";
+import Image from "next/image";
+import ThreeDot from "../_component/ThreeDot";
+import PostOneSkleton from "@/loading_assets/PostOneSkleton";
 export default function Page({
-  params,
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ id: number }>;
+  searchParams: Promise<{ id: number; date: string }>;
 }) {
-  const { slug } = React.use(params);
-  const { id } = React.use(searchParams);
+  const { id, date } = React.use(searchParams);
   const { userId } = use_Store();
   const PostDetail = trpc.post.getPostById.useQuery(
     { postId: Number(id) },
     {
       enabled: !!id,
-      staleTime: 60 * 60 * 1000,
+      staleTime: 50 * 60 * 1000,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
     }
   );
-
-  if (PostDetail.isLoading) return <p>Loading...</p>;
-  if (PostDetail.error) return <p>Error: {PostDetail.error.message}</p>;
-  if (!PostDetail?.data) {
-    return <>Wrong inpput page </>;
-  }
+  const { data, isLoading, isSuccess } =
+    trpc.categories.getCategoriesByPostId.useQuery(
+      {
+        postId: Number(PostDetail?.data?.id ?? -1),
+      },
+      {
+        enabled: !!PostDetail?.data?.id,
+        staleTime: 50 * 60 * 1000,
+      }
+    );
+  if (PostDetail.isLoading) return <PostOneSkleton />;
+  if (!PostDetail.data) return <>not found</>;
   return (
-    <div className="min-h-[calc(100vh-5rem)] max-h-auto border-2 border-black md:max-w-[1000px] md:min-w-[500px] m-auto flex">
+    <div
+      className="min-h-[calc(100vh-5rem)] max-h-auto shadow-lg rounded-xl dark:shadow-gray-400
+     shadow-black md:max-w-[1000px] md:min-w-[500px] m-auto flex"
+    >
       <div className="w-full p-2 ">
-        <h1 className="p-2 w-full font-bold text-2xl text-start">
-          post : {slug}
-        </h1>
-        {PostDetail.data && (
-          <div className="border">
-            <h2 className="text-xl font-semibold">{PostDetail.data.title}</h2>
-            <p>{PostDetail.data.content}</p>
+        <div className="p-2 mb-5 w-full font-bold text-2xl text-start flex justify-end">
+          <div>
+            {userId === PostDetail.data.authorId && !isLoading && isSuccess && (
+              <ThreeDot
+                postId={PostDetail.data.id}
+                postData={PostDetail.data}
+                category={data}
+              />
+            )}
+          </div>
+        </div>
+        {PostDetail.data && PostDetail.isEnabled && (
+          <div className="">
+            <div className="w-full mb-8">
+              {PostDetail.data.postPhoto && (
+                <Image
+                  src={PostDetail?.data?.postPhoto}
+                  height={700}
+                  width={700}
+                  alt="post Image"
+                  className="flex m-auto  object-center bg-cover md:w-[700px] h-[200px]"
+                />
+              )}
+            </div>
+            <div className="flex justify-between md:pl-5 p-5 pl-3">
+              <li className="font-semibold font-serif text-2xl capitalize">
+                {PostDetail.data.title}
+              </li>
+              <div className="flex gap-2">
+                <p className=" font-thin">{date}</p>
+                {!PostDetail.data.published && (
+                  <p className="text-blue-800 dark:text-blue-400 ">
+                    Draft Post
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-4 flex-wrap md:pl-5 pl-3">
+              {!isLoading &&
+                data?.length &&
+                data.map((val: any, index: number) => {
+                  return (
+                    <div
+                      className="shadow-xs pl-2 pr-2 p-1 rounded-lg w-fit font-semibold text-xs
+                   bg-violet-800/20 dark:text-white shadow-gray-500 capitalize"
+                      key={index}
+                    >
+                      {val.name}
+                    </div>
+                  );
+                })}
+            </div>
+            <div className="ms:pl-5 pl-4  p-3 font-thin leading-6 capitalize dark:text-gray-400 text-gray-900">
+              <Markdown>{PostDetail.data.content}</Markdown>
+            </div>
           </div>
         )}
       </div>
     </div>
   );
 }
-
-// author
-// :
-// "saca"
-// authorId
-// :
-// "5563c060-d273-4dad-9c47-a732e19a81ea"
-// content
-// :
-// "acab"
-// createdAt
-// :
-// "2025-10-21 04:39:15.035862"
-// id
-// :
-// 28
-// postPhoto
-// :
-// "https://jeukjvlizxvtdbuqagvv.supabase.co/storage/v1/object/public/post_photo/image1.png"
-// published
-// :
-// false
-// slug
-// :
-// "titile"
-// title
-// :
-// "titile"
-// updatedAt
-// :
-// "2025-10-21 04:39:15.035862"

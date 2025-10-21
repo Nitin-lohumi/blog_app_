@@ -6,27 +6,49 @@ import { trpc } from "../_trpc_client/client";
 import Image from "next/image";
 import { toast } from "react-toastify";
 import use_Store from "@/store/store";
-function PostInput() {
+import { util } from "zod";
+function PostInput({
+  data,
+  update,
+  PostCat,
+  postId,
+  isDone,
+}: {
+  data?: any;
+  update?: boolean;
+  PostCat?: any;
+  postId?: number;
+  isDone?: (check: boolean) => void;
+}) {
+  console.log(data);
   const navigate = useRouter();
   const { userId } = use_Store();
-  const [cat, setCat] = useState<string[]>([]);
+  const [catName] = useState(() => PostCat?.map((v: any) => v.name) || []);
+  const [cat, setCat] = useState<string[]>(catName || []);
   const [category, setCategory] = useState("");
   const [publicUrl, setPublicUrl] = useState("");
   const [selectFile, setSelectFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const file = useRef(null);
   const [inputData, setInputdata] = useState({
-    title: "",
-    content: "",
-    postPhoto: "",
+    title: data?.title || "",
+    content: data?.content || "",
+    postPhoto: data?.postPhoto || "",
     slug: "",
-    published: false,
-    author: "",
-    description: "",
+    published: data?.published || false,
+    author: data?.author || "",
+    description: data?.discription || "",
   });
+  const utils = trpc.useContext();
   const mutations = trpc.post.fileHandler.useMutation();
   const SaveMutation = trpc.post.createPost.useMutation();
-  const utils = trpc.useUtils();
+  const updateMutation = trpc.post.updatePost.useMutation({
+    onSuccess: (res) => {
+      utils.categories.getCategoriesByPostId.refetch();
+      utils.post.getAllpost.refetch();
+      utils.post.getPostById.setData({ postId: res[0].id }, res[0]);
+    },
+  });
   const handleFilechange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!userId || !inputData.author || !inputData.title) {
       return toast.error("Author name & title Could not be empty !");
@@ -69,17 +91,34 @@ function PostInput() {
       return toast.error("Author name & title ,content Could not be empty !");
     }
     const sg = inputData.title.split(" ").join("_");
-    SaveMutation.mutate({
-      postPhoto: publicUrl,
-      author: inputData.author,
-      content: inputData.content,
-      title: inputData.title,
-      authorId: userId,
-      categories: cat,
-      description: inputData?.description,
-      published: publish,
-      slug: sg,
-    });
+    if (update) {
+      const data = {
+        id: postId!,
+        author: inputData.author,
+        content: inputData.content,
+        title: inputData.title,
+        authorId: userId,
+        categories: cat,
+        description: inputData?.description,
+        published: publish,
+        slug: sg,
+      };
+      console.log(cat);
+      updateMutation.mutate(data);
+      isDone?.(false);
+    } else {
+      SaveMutation.mutate({
+        postPhoto: publicUrl,
+        author: inputData.author,
+        content: inputData.content,
+        title: inputData.title,
+        authorId: userId,
+        categories: cat,
+        description: inputData?.description,
+        published: publish,
+        slug: sg,
+      });
+    }
   };
   useEffect(() => {
     if (SaveMutation.isSuccess) {
@@ -104,7 +143,12 @@ function PostInput() {
         navigate.push("/#dashboard");
       }
     }
-  }, [SaveMutation.isSuccess]);
+    if (updateMutation.isSuccess) {
+      utils.post.invalidate();
+      toast.success("Post is updated sucessfully");
+      console.log(updateMutation.data);
+    }
+  }, [SaveMutation.isSuccess, updateMutation.isSuccess]);
   return (
     <>
       <label htmlFor="title">
@@ -133,19 +177,21 @@ function PostInput() {
           placeholder="Enter your Content "
         ></textarea>
       </label>
-      <label htmlFor="name">
-        <input
-          type="text"
-          name="name"
-          id="name"
-          className="w-full outline-none  border dark:border-gray-400 rounded-xl  p-2 capitalize"
-          value={inputData.author}
-          onChange={(e) =>
-            setInputdata((prev) => ({ ...prev, author: e.target.value }))
-          }
-          placeholder="Enter your name "
-        />
-      </label>
+      {!update && (
+        <label htmlFor="name">
+          <input
+            type="text"
+            name="name"
+            id="name"
+            className="w-full outline-none  border dark:border-gray-400 rounded-xl  p-2 capitalize"
+            value={inputData.author}
+            onChange={(e) =>
+              setInputdata((prev) => ({ ...prev, author: e.target.value }))
+            }
+            placeholder="Enter your name "
+          />
+        </label>
+      )}
       <div>
         <div className="flex gap-3 w-full p-2 flex-wrap">
           {cat.length > 0 &&
@@ -202,7 +248,7 @@ function PostInput() {
           placeholder="Enter Category Discription"
         />
       </label>
-      {preview && mutations.isSuccess && (
+      {!update && preview && mutations.isSuccess && (
         <div className="flex justify-center w-full">
           <Image
             src={preview}
@@ -222,25 +268,29 @@ function PostInput() {
         accept="image/jpeg|image/png|image/jpg"
         hidden
       />
-      <div className="flex justify-center">
-        <label
-          htmlFor="file"
-          className="flex rounded-xl border cursor-pointer w-full p-2 justify-center"
-        >
-          {selectFile ? (
-            selectFile.name
-          ) : (
-            <RiImageAddFill size={100} color="gray" />
-          )}
-        </label>
-      </div>
+      {!update && (
+        <div className="flex justify-center">
+          <label
+            htmlFor="file"
+            className="flex rounded-xl border cursor-pointer w-full p-2 justify-center"
+          >
+            {selectFile ? (
+              selectFile.name
+            ) : (
+              <RiImageAddFill size={100} color="gray" />
+            )}
+          </label>
+        </div>
+      )}
       <div className="flex justify-between p-2">
-        <button
-          className="border p-2 rounded-xl text-blue-700  cursor-pointer"
-          onClick={() => handleSavePost(false)}
-        >
-          Save as Draft
-        </button>
+        {!data?.published && !update && (
+          <button
+            className="border p-2 rounded-xl text-blue-700  cursor-pointer"
+            onClick={() => handleSavePost(false)}
+          >
+            Save as Draft
+          </button>
+        )}
         <button
           className="border p-2 rounded-xl text-green-600 cursor-pointer"
           onClick={() => handleSavePost(true)}

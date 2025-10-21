@@ -26,7 +26,6 @@ function PostCard({
     },
     { staleTime: 24 * 24 * 60 }
   );
-  console.log(post.authorId);
   const date = new Date(post?.createdAt);
   const formattedDate = format(date, "dd MMM yyyy");
   return (
@@ -70,7 +69,7 @@ function PostCard({
             <h2 className="capitalize font-bold pt-2 pb-2 w-full">
               {post.title}
             </h2>
-            <Link href={`/${post.slug}?id=${post.id}`}>
+            <Link href={`/${post.slug}?id=${post.id}&&date=${formattedDate}`}>
               <MdArrowOutward />
             </Link>
           </div>
@@ -80,23 +79,34 @@ function PostCard({
                 ? post.content.slice(0.8)
                 : post.content}
             </ReactMarkdown>
-            <Link href={""}>{post.content.length < 80 ? "" : "  ..more"}</Link>
+            {post.content.length > 80 && (
+              <Link href={`/${post.slug}?id=${post.id}&&date=${formattedDate}`}>
+                ...more
+              </Link>
+            ) }
           </div>
           <div className="flex flex-wrap gap-2 items-center mt-5">
             {data?.length &&
-              data.map((val) => {
+              data.map((val, i) => {
+                if (i > 2) return;
                 return (
                   <div
                     className="shadow-xs pl-2 pr-2 p-1 rounded-lg w-fit font-semibold text-xs
-                   bg-violet-800/20 text-black shadow-gray-500"
-                    key={val?.id}
+                   bg-violet-800/20 dark:text-white shadow-gray-500"
+                    key={i}
                   >
                     {val?.name}
                   </div>
                 );
               })}
             {data?.length && data.length > 3 && (
-              <span className="font-thin text-xs">more Category</span>
+              <div className="font-thin text-xs">
+                <Link
+                  href={`/${post.slug}?id=${post.id}&&date=${formattedDate}`}
+                >
+                  ...more
+                </Link>
+              </div>
             )}
           </div>
         </div>

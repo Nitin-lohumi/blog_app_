@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -17,40 +17,98 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-function ThreeDot() {
+import PostInput from "./PostInput";
+import { trpc } from "../_trpc_client/client";
+import use_Store from "@/store/store";
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
+function ThreeDot({
+  postId,
+  postData,
+  category,
+}: {
+  postId: number;
+  postData: any;
+  category: any;
+}) {
+  const { userId } = use_Store();
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  const [updateDilogOpen, setUpdateDilogOpen] = useState<boolean>(false);
+  const utils = trpc.useUtils();
+  const router = useRouter();
+  const deletePost = trpc.post.deletePost.useMutation({
+    onSuccess: () => {
+      utils.post.getAllpost.refetch();
+    },
+    onError: (err: any) => {
+      toast.error(err);
+    },
+  });
+  const handleDelete = () => {
+    if (!postId && !userId && postData.authorId != userId) {
+      return toast.info("Some Thing went wrong");
+    }
+    deletePost.mutate({ id: Number(postId), userId: userId! });
+  };
+  useEffect(() => {
+    if (deletePost.isSuccess) {
+      router.push("/");
+    }
+  }, [deletePost.isSuccess]);
+  console.log(deletePost.error?.message);
   return (
     <>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
-          <button className="cursor-pointer">open</button>
+          <button className="cursor-pointer">:</button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="dark:!bg-blue-700">
+        <DropdownMenuContent className="dark:!bg-gray-900">
           <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => setDialogOpen(true)}>
+            <DropdownMenuItem onClick={() => setUpdateDilogOpen(true)}>
               updatePost
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Add tag</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>change Tag</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Delete post</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDialogOpen(true)}>
+              Delete post
+            </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={updateDilogOpen} onOpenChange={setUpdateDilogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>update post</DialogTitle>
+            <div>
+              <PostInput
+                data={postData}
+                update={true}
+                PostCat={category}
+                postId={postId}
+                isDone={setUpdateDilogOpen}
+              />
+            </div>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete post</DialogTitle>
             <DialogDescription></DialogDescription>
             <DialogFooter>
               <DialogClose asChild>
-                <button>close</button>
+                <button className="bg-green-700 p-2 rounded-xl cursor-pointer text-white">
+                  Cancel
+                </button>
               </DialogClose>
-              <button>create</button>
+              <button
+                className="bg-red-700 p-2 text-white rounded-xl cursor-pointer"
+                onClick={() => handleDelete()}
+              >
+                Delete
+              </button>
             </DialogFooter>
           </DialogHeader>
         </DialogContent>

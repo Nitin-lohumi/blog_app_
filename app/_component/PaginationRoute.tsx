@@ -1,7 +1,5 @@
 "use client";
-import React, { useState } from "react";
-import { trpc } from "@/app/_trpc_client/client";
-import { AppRouter } from "@/server/trpc";
+import React from "react";
 type Props = {
   page: number;
   setPage: (value: number | ((prev: number) => number)) => void;
@@ -34,7 +32,7 @@ export default function Pagination({
   };
 
   return (
-    <div className="border p-2">
+    <div className="p-2">
       <div className="flex w-full md:justify-between justify-center gap-3">
         <button
           onClick={() => setPage((prev) => Math.max(1, prev - 1))}

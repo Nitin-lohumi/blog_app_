@@ -4,7 +4,7 @@ import { db } from "@/app/db";
 import { posts } from "@/app/db/schema/PostSchema";
 import { categories } from "@/app/db/schema/CategoriesSchema";
 import { post_categories } from "@/app/db/schema/Post_Categories";
-import { and, eq, sql, desc } from "drizzle-orm";
+import { and, eq, sql, desc, notExists } from "drizzle-orm";
 import { supabaseAdmin } from "@/utils/serverClient/supabaseServer";
 
 const PostValidate = z.object({
@@ -23,7 +23,6 @@ const PostUpdateValidate = z.object({
   id: z.number(),
   title: z.string().optional(),
   content: z.string().optional(),
-  postPhoto: z.string().optional(),
   slug: z.string().optional(),
   published: z.boolean().optional(),
   author: z.string().optional(),
@@ -188,74 +187,107 @@ export const postRouter = router({
       }
       return newPost;
     }),
-
   updatePost: publicProcuder
     .input(PostUpdateValidate)
     .mutation(async ({ input }: { input: PostUpdateType }) => {
-      const { id, categories: catName, description, ...updateData } = input;
-      console.log("id:", id);
-      console.log("input.categories:", catName);
+      const { id, categories: catNames, description, ...updateData } = input;
+
       const updatedPost = await db
         .update(posts)
         .set(updateData)
         .where(eq(posts.id, id))
         .returning();
 
-      if (catName && catName.length > 0) {
+      if (catNames && catNames.length > 0) {
         const categoryIds = await Promise.all(
-          catName.map(async (name) => {
+          catNames.map(async (name) => {
             const existing = await db.query.categories.findFirst({
               where: (c, { eq }) => eq(c.name, name),
             });
             if (existing) return existing.id;
-            const newCat = await db
+            const [newCat] = await db
               .insert(categories)
               .values({
                 name,
                 slug: name.toLowerCase(),
-                description: input.description ?? "unknown",
+                description: description ?? "unknown",
               })
-              .returning();
-            return newCat[0].id;
+              .returning({ id: categories.id });
+
+            return newCat.id;
           })
         );
-        await db.delete(post_categories).where(eq(post_categories.id, id));
+        await db.delete(post_categories).where(eq(post_categories.postId, id));
         const postCategoryValues = categoryIds.map((catId) => ({
           postId: id,
           categoryId: catId,
         }));
         await db.insert(post_categories).values(postCategoryValues);
+      } else {
+        await db.delete(post_categories).where(eq(post_categories.postId, id));
       }
-      return updatedPost;
-    }),
-
-  deletePost: publicProcuder
-    .input(z.object({ id: z.number(), userId: z.string() }))
-    .mutation(async ({ input }) => {
-      const { id, userId } = input;
-      const deletedPost = await db
-        .delete(posts)
-        .where(and(eq(posts.id, id), eq(posts.authorId, userId)))
-        .returning();
-      if (deletedPost.length === 0) return [];
-      await db.delete(post_categories).where(eq(post_categories.postId, id));
-      const orphanCategories = await db.query.categories.findMany({
-        where: (c, { notExists }) =>
+      await db
+        .delete(categories)
+        .where(
           notExists(
             db
               .select()
               .from(post_categories)
-              .where(eq(post_categories.categoryId, c.id))
-          ),
-      });
-
-      if (orphanCategories.length > 0) {
-        await Promise.all(
-          orphanCategories.map((cat) =>
-            db.delete(categories).where(eq(categories.id, cat.id))
+              .where(eq(post_categories.categoryId, categories.id))
           )
         );
+      return updatedPost;
+    }),
+  deletePost: publicProcuder
+    .input(z.object({ id: z.number(), userId: z.string() }))
+    .mutation(async ({ input }) => {
+      const { id, userId } = input;
+
+      try {
+        const existingPost = await db.query.posts.findFirst({
+          where: and(eq(posts.id, id), eq(posts.authorId, userId)),
+        });
+
+        if (!existingPost) {
+          console.log("Post not found or user is not the author", id, userId);
+          return [];
+        }
+
+        console.log("Delete input:", id, userId);
+
+        // 2️⃣ Delete related post_categories FIRST
+        await db.delete(post_categories).where(eq(post_categories.postId, id));
+
+        // 3️⃣ Delete the post AFTER child rows removed
+        const deletedPost = await db.delete(posts).where(eq(posts.id, id));
+        console.log("Deleted post result:", deletedPost);
+
+        // 4️⃣ Delete orphan categories
+        const orphanCategories = await db.query.categories.findMany({
+          where: (c, { notExists }) =>
+            notExists(
+              db
+                .select()
+                .from(post_categories)
+                .where(eq(post_categories.categoryId, c.id))
+            ),
+        });
+
+        if (orphanCategories.length > 0) {
+          await Promise.all(
+            orphanCategories.map((cat) =>
+              db.delete(categories).where(eq(categories.id, cat.id))
+            )
+          );
+        }
+
+        return deletedPost;
+      } catch (err) {
+        console.error("Delete failed:", err);
+        throw new Error(
+          "Post deletion failed: " +
+            (err instanceof Error ? err.message : String(err))
+        );
       }
-      return deletedPost;
     }),
 });

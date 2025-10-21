@@ -4,6 +4,7 @@ import { trpc } from "../_trpc_client/client";
 import use_Store from "@/store/store";
 import CreatePost from "./CreatePost";
 import PostCard from "./PostCard";
+import DashBoardSkleton from "@/loading_assets/DashBoardSkleton";
 
 function DashBoard() {
   const { userId } = use_Store();
@@ -18,7 +19,11 @@ function DashBoard() {
     return <></>;
   }
   if (isLoading) {
-    return <p className="text-center text-gray-500">Loading drafts...</p>;
+    return (
+      <>
+        <DashBoardSkleton />
+      </>
+    );
   }
 
   return (

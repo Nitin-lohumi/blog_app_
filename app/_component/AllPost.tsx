@@ -3,12 +3,20 @@ import React, { useState } from "react";
 import { trpc } from "../_trpc_client/client";
 import PostCard from "./PostCard";
 import Pagination from "./PaginationRoute";
+import PostSkeleton from "@/loading_assets/PostSkeleton";
 function AllPost() {
   const [page, setpage] = useState(1);
   const { data, isLoading, isError } = trpc.post.getAllpost.useQuery(
     { page },
     { staleTime: 60 * 60 * 1000 }
   );
+  if (isLoading) {
+    return (
+      <>
+        <PostSkeleton />
+      </>
+    );
+  }
   return (
     <>
       <div className="p-2" id="post">

@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
 import { trpc } from "@/app/_trpc_client/client";
-
+import use_Store from "@/store/store";
 export default function Photo() {
+  console.log(use_Store().userId);
   const [file, setFile] = useState<File | null>(null);
   const { data, mutate } = trpc.post.fileHandler.useMutation({
     onSuccess: () => alert("file uploaded!"),
@@ -17,7 +18,6 @@ export default function Photo() {
     if (!["image/jpeg", "image/jpg", "image/png"].includes(file.type)) {
       return alert("file type error!");
     }
-    console.log(file.type);
     reader.onloadend = () => {
       mutate({
         fileName: "nitin_" + file.name,
@@ -29,7 +29,6 @@ export default function Photo() {
     };
     reader.readAsDataURL(file);
   };
-  console.log(data);
   return (
     <div>
       <input

@@ -65,7 +65,13 @@ export const postRouter = router({
         .getPublicUrl(input.fileName).data.publicUrl;
       return publicUrl;
     }),
-
+  getTop3POst: publicProcuder.query(async () => {
+    const topPost = await db.query.posts.findMany({
+      orderBy: desc(posts.createdAt),
+      limit: 3,
+    });
+    return topPost;
+  }),
   getPostById: publicProcuder
     .input(z.object({ postId: z.number() }))
     .query(async ({ input }) => {
@@ -80,7 +86,7 @@ export const postRouter = router({
     .input(z.object({ page: z.number(), filter: z.string().optional() }))
     .query(async ({ input }) => {
       const { page, filter } = input;
-      const limit = 8;
+      const limit = 6;
       const offset = (page - 1) * limit;
 
       if (filter && filter.trim() !== "") {

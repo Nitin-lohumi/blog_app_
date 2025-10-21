@@ -8,7 +8,11 @@ function AllPost() {
   const [page, setpage] = useState(1);
   const { data, isLoading, isError } = trpc.post.getAllpost.useQuery(
     { page },
-    { staleTime: 60 * 60 * 1000 }
+    {
+      staleTime: 0,
+      refetchOnMount: true,
+      refetchOnWindowFocus: true,
+    }
   );
   if (isLoading) {
     return (

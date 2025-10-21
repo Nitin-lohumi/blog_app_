@@ -2,15 +2,14 @@
 import React from "react";
 type Props = {
   page: number;
-  setPage: (value: number | ((prev: number) => number)) => void;
+  setPageAction: (value: number | ((prev: number) => number)) => void;
   totalPages: number;
 };
 export default function Pagination({
   page = 10,
-  setPage,
+  setPageAction,
   totalPages = 10,
 }: Props) {
-  console.log(page);
   const getPageNumbers = () => {
     const pages = [];
     if (totalPages <= 7) {
@@ -35,7 +34,7 @@ export default function Pagination({
     <div className="p-2">
       <div className="flex w-full md:justify-between justify-center gap-3">
         <button
-          onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+          onClick={() => setPageAction((prev) => Math.max(1, prev - 1))}
           className="cursor-pointer border bg-blue-400 
           dark:bg-blue-40 disabled:bg-gray-200 dark:disabled:bg-gray-600 rounded-lg p-1 pl-2 pr-2 disabled:cursor-not-allowed"
           disabled={page === 1}
@@ -48,7 +47,7 @@ export default function Pagination({
               <span key={index}>...</span>
             ) : (
               <button
-                onClick={() => setPage(Number(num))}
+                onClick={() => setPageAction(Number(num))}
                 key={index}
                 className={`px-3 py-1 rounded ${
                   num === page
@@ -65,7 +64,7 @@ export default function Pagination({
           className="cursor-pointer border bg-blue-400 
            dark:bg-blue-400 disabled:bg-gray-200 dark:disabled:bg-gray-600 rounded-lg pl-2 pr-2 disabled:cursor-not-allowed"
           onClick={() =>
-            setPage((prev) => (page < totalPages ? prev + 1 : prev))
+            setPageAction((prev) => (page < totalPages ? prev + 1 : prev))
           }
           disabled={page === totalPages}
         >

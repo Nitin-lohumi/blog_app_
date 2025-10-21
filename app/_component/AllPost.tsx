@@ -49,7 +49,7 @@ function AllPost() {
         <>
           <Pagination
             page={page}
-            setPage={setpage}
+            setPageAction={setpage}
             totalPages={data.totalPage}
           />
         </>

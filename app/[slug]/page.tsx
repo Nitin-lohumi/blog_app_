@@ -79,19 +79,20 @@ export default function Page({
               </div>
             </div>
             <div className="flex gap-4 flex-wrap md:pl-5 pl-3">
-              {!isLoading &&
-                data?.length &&
-                data.map((val: any, index: number) => {
-                  return (
-                    <div
-                      className="shadow-xs pl-2 pr-2 p-1 rounded-lg w-fit font-semibold text-xs
+              {!isLoading && data?.length
+                ? data.map((val: any, index: number) => {
+                    return (
+                      <div
+                        className="shadow-xs pl-2 pr-2 p-1 rounded-lg w-fit font-semibold text-xs
                    bg-violet-800/20 dark:text-white shadow-gray-500 capitalize"
-                      key={index}
-                    >
-                      {val.name}
-                    </div>
-                  );
-                })}
+                        key={index}
+                      >
+                        {val.name}
+                      </div>
+                    );
+                  })
+                : ""}
+                
             </div>
             <div className="ms:pl-5 pl-4  p-3 font-thin leading-6 capitalize dark:text-gray-400 text-gray-900">
               <Markdown>{PostDetail.data.content}</Markdown>

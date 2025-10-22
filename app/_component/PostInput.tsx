@@ -283,6 +283,7 @@ function PostInput({
           <button
             className="border p-2 rounded-xl text-blue-700  cursor-pointer"
             onClick={() => handleSavePost(false)}
+            disabled={mutations.isPending}
           >
             Save as Draft
           </button>
@@ -290,6 +291,7 @@ function PostInput({
         <button
           className="border p-2 rounded-xl text-green-600 cursor-pointer"
           onClick={() => handleSavePost(true)}
+          disabled={mutations.isPending}
         >
           Share
         </button>

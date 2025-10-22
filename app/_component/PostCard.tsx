@@ -61,8 +61,13 @@ function PostCard({
             dashboad && !fristpostDash ? "flex flex-col w-full" : ""
           }`}
         >
-          <div className="flex flex-row  items-center gap-2 p-1 font-thin text-xs text-blue-800 w-full">
-            <span>{post.authorId == userId ? "Your Post" : post.author}</span>
+          <div
+            className="flex flex-row  items-center md:gap-2 gap-4 p-1 font-thin text-xs 
+           w-full"
+          >
+            <span className="dark:text-blue-300 text-blue-700">
+              {post.authorId == userId ? "Your Post" : post.author}
+            </span>
             <li>{formattedDate}</li>
           </div>
           <div className="flex items-center justify-between w-full">
@@ -73,41 +78,47 @@ function PostCard({
               <MdArrowOutward />
             </Link>
           </div>
-          <div className="flex flex-row  font-thin text-xs text-wrap  w-full">
+          <div className="flex flex-col   font-thin text-xs text-wrap  w-full">
             <ReactMarkdown>
-              {post.content.length > 80
-                ? post.content.slice(0.8)
+              {post.content.length > 50
+                ? post.content.slice(0, 50)
                 : post.content}
             </ReactMarkdown>
-            {post.content.length > 80 && (
-              <Link href={`/${post.slug}?id=${post.id}&&date=${formattedDate}`}>
+            {post.content.length > 50 && (
+              <Link
+                href={`/${post.slug}?id=${post.id}&&date=${formattedDate}`}
+                className="inline"
+              >
                 ...more
               </Link>
-            ) }
+            )}
           </div>
           <div className="flex flex-wrap gap-2 items-center mt-5">
-            {data?.length &&
-              data.map((val, i) => {
-                if (i > 2) return;
-                return (
-                  <div
-                    className="shadow-xs pl-2 pr-2 p-1 rounded-lg w-fit font-semibold text-xs
+            {data?.length! > 0
+              ? data?.map((val, i) => {
+                  if (i > 2) return;
+                  return (
+                    <div
+                      className="shadow-xs pl-2 pr-2 p-1 rounded-lg w-fit font-semibold text-xs
                    bg-violet-800/20 dark:text-white shadow-gray-500"
-                    key={i}
-                  >
-                    {val?.name}
+                      key={i}
+                    >
+                      {val?.name + "asca"}
+                    </div>
+                  );
+                })
+              : ""}
+            {data?.length
+              ? data.length > 3 && (
+                  <div className="font-thin text-xs">
+                    <Link
+                      href={`/${post.slug}?id=${post.id}&&date=${formattedDate}`}
+                    >
+                      ...more
+                    </Link>
                   </div>
-                );
-              })}
-            {data?.length && data.length > 3 && (
-              <div className="font-thin text-xs">
-                <Link
-                  href={`/${post.slug}?id=${post.id}&&date=${formattedDate}`}
-                >
-                  ...more
-                </Link>
-              </div>
-            )}
+                )
+              : ""}
           </div>
         </div>
       </div>

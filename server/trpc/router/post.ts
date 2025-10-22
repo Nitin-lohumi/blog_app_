@@ -177,7 +177,7 @@ export const postRouter = router({
             const newCat = await db
               .insert(categories)
               .values({
-                name,
+                name: name.toLowerCase(),
                 slug: name.toLowerCase(),
                 description: input.description ?? "unknown",
               })
@@ -193,11 +193,11 @@ export const postRouter = router({
       }
       return newPost;
     }),
+
   updatePost: publicProcuder
     .input(PostUpdateValidate)
     .mutation(async ({ input }: { input: PostUpdateType }) => {
       const { id, categories: catNames, description, ...updateData } = input;
-
       const updatedPost = await db
         .update(posts)
         .set(updateData)
@@ -214,7 +214,7 @@ export const postRouter = router({
             const [newCat] = await db
               .insert(categories)
               .values({
-                name,
+                name: name.toLowerCase(),
                 slug: name.toLowerCase(),
                 description: description ?? "unknown",
               })
@@ -261,14 +261,11 @@ export const postRouter = router({
 
         console.log("Delete input:", id, userId);
 
-        // 2️⃣ Delete related post_categories FIRST
         await db.delete(post_categories).where(eq(post_categories.postId, id));
 
-        // 3️⃣ Delete the post AFTER child rows removed
         const deletedPost = await db.delete(posts).where(eq(posts.id, id));
         console.log("Deleted post result:", deletedPost);
 
-        // 4️⃣ Delete orphan categories
         const orphanCategories = await db.query.categories.findMany({
           where: (c, { notExists }) =>
             notExists(

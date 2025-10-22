@@ -29,7 +29,7 @@ function DashBoard() {
 
   return (
     <div className="p-5" id="dashboard">
-      <h2 className="font-bold text-2xl">DashBoard</h2>
+      <h2 className="font-bold text-2xl">Recent Post & Draft post</h2>
       <br />
       {!data?.length && !posts?.data?.length ? (
         <CreatePost />

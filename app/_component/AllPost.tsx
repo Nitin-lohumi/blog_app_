@@ -20,7 +20,6 @@ function AllPost() {
   );
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toLowerCase();
-    console.log(value);
     setFilter(value);
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -60,7 +59,7 @@ function AllPost() {
                   className="shadow-xs rounded-2xl shadow-gray-600 flex flex-col p-3 w-full 
                   min-h-[150px] max-h-auto"
                 >
-                  <PostCard post={filter==""?val:val.posts} />
+                  <PostCard post={filter == "" ? val : val.posts} />
                 </div>
               );
             })}
@@ -70,10 +69,10 @@ function AllPost() {
             <PostSkeleton />
           </>
         ) : (
-          "NO Post Avaiable"
+          <div className="text-center"> NO Post Avaiable</div>
         )}
       </div>
-      {data?.totalPage && (
+      {data?.data && data.totalPage && (
         <>
           <Pagination
             page={page}

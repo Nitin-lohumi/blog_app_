@@ -40,7 +40,7 @@ function DashBoard() {
               <div className="md:flex p-2 rounded-2xl shadow-xs shadow-gray-600 w-full">
                 <PostCard post={data[0]} fristpostDash={true} dashboad={true} />
               </div>
-              <div className="w-full flex flex-col gap-3 md:h-80  h-40 overflow-auto p-1">
+              <div className="w-full flex flex-col gap-3 md:h-80  h-48  border-2 overflow-auto p-1">
                 {data.map((val, i) => {
                   if (i == 0) return;
                   return (

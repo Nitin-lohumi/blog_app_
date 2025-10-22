@@ -1,6 +1,4 @@
 import React from "react";
-import ToggleBtnMode from "./_component/ToggleBtnMode";
-import ThreeDot from "./_component/ThreeDot";
 import DashBoard from "./_component/DashBoard";
 import AllPost from "./_component/AllPost";
 

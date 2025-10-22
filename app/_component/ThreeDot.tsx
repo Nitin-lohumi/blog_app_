@@ -55,7 +55,6 @@ function ThreeDot({
       router.push("/");
     }
   }, [deletePost.isSuccess]);
-  console.log(deletePost.error?.message);
   return (
     <>
       <DropdownMenu modal={false}>

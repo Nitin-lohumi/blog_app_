@@ -20,7 +20,6 @@ function PostInput({
   postId?: number;
   isDone?: (check: boolean) => void;
 }) {
-  console.log(data);
   const navigate = useRouter();
   const { userId } = use_Store();
   const [catName] = useState(() => PostCat?.map((v: any) => v.name) || []);
@@ -58,7 +57,6 @@ function PostInput({
       setSelectFile(f);
       setPreview(URL.createObjectURL(f));
       const base64 = await toBase64(f);
-      console.log("data");
       mutations.mutate({
         fileName: f.name,
         fileType: f.type as "image/jpeg" | "image/jpg" | "image/png",
@@ -103,7 +101,6 @@ function PostInput({
         published: publish,
         slug: sg,
       };
-      console.log(cat);
       updateMutation.mutate(data);
       isDone?.(false);
     } else {
@@ -146,7 +143,6 @@ function PostInput({
     if (updateMutation.isSuccess) {
       utils.post.invalidate();
       toast.success("Post is updated sucessfully");
-      console.log(updateMutation.data);
     }
   }, [SaveMutation.isSuccess, updateMutation.isSuccess]);
   return (

@@ -37,7 +37,7 @@ export default function Page({
   if (!PostDetail.data) return <>not found</>;
   return (
     <div
-      className="min-h-[calc(100vh-5rem)] max-h-auto shadow-lg rounded-xl dark:shadow-gray-400
+      className="min-h-[calc(100vh-5rem)] max-h-auto dark:shadow-xs shadow-lg rounded-xl dark:shadow-gray-400
      shadow-black md:max-w-[1000px] md:min-w-[500px] m-auto flex"
     >
       <div className="w-full p-2 ">

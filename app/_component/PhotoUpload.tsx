@@ -3,7 +3,6 @@ import { useState } from "react";
 import { trpc } from "@/app/_trpc_client/client";
 import use_Store from "@/store/store";
 export default function Photo() {
-  console.log(use_Store().userId);
   const [file, setFile] = useState<File | null>(null);
   const { data, mutate } = trpc.post.fileHandler.useMutation({
     onSuccess: () => alert("file uploaded!"),

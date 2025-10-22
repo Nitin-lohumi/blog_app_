@@ -19,7 +19,8 @@ function AllPost() {
     }
   );
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    const value = e.target.value.toLowerCase();
+    console.log(value);
     setFilter(value);
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);

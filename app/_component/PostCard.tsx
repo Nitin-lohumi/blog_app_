@@ -103,7 +103,7 @@ function PostCard({
                    bg-violet-800/20 dark:text-white shadow-gray-500"
                       key={i}
                     >
-                      {val?.name + "asca"}
+                      {val?.name}
                     </div>
                   );
                 })
